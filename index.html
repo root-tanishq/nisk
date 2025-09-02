@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deterministic Password Generator</title>
+  <style>
+    :root{
+      --bg:#0f1220;--panel:#171a2b;--muted:#2a2e45;--text:#e7e9f3;--accent:#8b9dff;--accent-2:#7cf5ff;--danger:#ff6b6b;--ok:#68f3a9;
+      --radius:18px;--radius-sm:12px;--shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(1200px 800px at 10% -10%,#1a1e33 0%,#0f1220 60%);color:var(--text);display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:min(900px,100%);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+    h1{font-size:clamp(20px,2.6vw,28px);margin:0;font-weight:700;letter-spacing:.3px}
+    .pill{font-size:12px;background:rgba(139,157,255,.14);color:var(--accent);border:1px solid rgba(139,157,255,.35);padding:6px 10px;border-radius:999px}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    fieldset{border:1px solid var(--muted);border-radius:var(--radius-sm);padding:14px}
+    legend{padding:0 8px;color:#c7cbff}
+    label{font-size:13px;color:#cfd3ea}
+    .row{display:grid;grid-template-columns:1fr 160px;gap:10px;margin:10px 0}
+    input[type="text"],input[type="number"],input[type="password"],input[type="search"],input[type="url"],input[type="email"],.out{width:100%;background:#0d1021;border:1px solid #2a2e45;color:var(--text);padding:12px 14px;border-radius:12px;outline:none}
+    input[type="number"]{appearance:textfield}
+    input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{appearance:none;margin:0}
+    .row.inline{grid-template-columns:1fr 1fr}
+    .checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px}
+    .checks label{display:flex;align-items:center;gap:8px;background:#0d1021;border:1px solid #2a2e45;border-radius:10px;padding:10px}
+    .hint{font-size:12px;color:#a7abcc;margin-top:4px}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:10px}
+    button{background:linear-gradient(180deg,#6673ff,#5464ff);border:none;color:white;padding:12px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(84,100,255,.35)}
+    button.secondary{background:#22253b;border:1px solid #2a2e45;color:#d7daf5;box-shadow:none}
+    button.ghost{background:transparent;border:1px solid #2a2e45;color:#cfd3ea}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .out-wrap{position:relative}
+    .out{font-size:16px;padding-right:96px}
+    .icon-btn{position:absolute;top:50%;transform:translateY(-50%);right:8px;display:flex;gap:6px}
+    .icon-btn button{padding:8px 10px;border-radius:10px}
+    .status{font-size:12px;color:#a7ffcf;margin-left:10px;opacity:0;transition:.3s ease}
+    .status.show{opacity:1}
+    .footer{margin-top:18px;font-size:12px;color:#9aa0c8}
+    .err{color:var(--danger);font-size:12px;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>Deterministic Password Generator</h1>
+      <span class="pill">Same input + salt ⇒ same password</span>
+    </div>
+    <div class="grid">
+      <section>
+        <fieldset>
+          <legend>Inputs</legend>
+          <div class="row">
+            <label>
+              Source string / key
+              <input id="inp" type="text" placeholder="e.g., my-username or any phrase" />
+            </label>
+            <label>
+              Salt
+              <input id="salt" type="text" value="something" />
+            </label>
+          </div>
+          <div class="row inline">
+            <label>
+              Length
+              <input id="len" type="number" min="4" max="128" value="15" />
+            </label>
+            <label>
+              Randomness level
+              <input id="lvl" type="number" min="1" max="500" value="50" />
+            </label>
+          </div>
+          <div class="checks" role="group" aria-label="Character sets">
+            <label><input id="ckU" type="checkbox" checked /> Uppercase (A–Z)</label>
+            <label><input id="ckL" type="checkbox" checked /> Lowercase (a–z)</label>
+            <label><input id="ckD" type="checkbox" checked /> Digits (0–9)</label>
+            <label><input id="ckS" type="checkbox" checked /> Symbols (!@#$…)</label>
+          </div>
+          <div class="hint">Deterministic: change any option → password changes predictably. It <strong>does not</strong> use true randomness.
+          </div>
+          <div id="err" class="err" hidden></div>
+          <div class="actions">
+            <button id="gen">Generate</button>
+            <button id="reset" class="secondary" type="button">Reset</button>
+            <span id="status" class="status">Copied!</span>
+          </div>
+        </fieldset>
+      </section>
+      <section>
+        <fieldset>
+          <legend>Password</legend>
+          <div class="out-wrap">
+            <input id="out" class="out" type="password" readonly placeholder="•••••••••••••" />
+            <div class="icon-btn">
+              <button id="toggle" class="ghost" title="Show/Hide" aria-label="Toggle visibility">🙈</button>
+              <button id="copy" class="ghost" title="Copy" aria-label="Copy password">📋</button>
+            </div>
+          </div>
+          <div class="hint">Hidden by default. Use the eye to reveal. Copy writes to your clipboard.</div>
+        </fieldset>
+        <div class="footer">⚠️ For production secrets, prefer a high-quality password manager with secure random generation. This tool is for deterministic, reproducible passwords from an input.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const LOWER = "abcdefghijklmnopqrstuvwxyz";
+    const DIGIT = "0123456789";
+    const SYMBOL = "!@#$%^&*()_+-=[]{}|;:',.<>?/`~\"\\"; // note escaped quote & backslash
+
+    const $ = (id) => document.getElementById(id);
+    const ui = { inp: $("inp"), salt: $("salt"), len: $("len"), lvl: $("lvl"),
+      ckU: $("ckU"), ckL: $("ckL"), ckD: $("ckD"), ckS: $("ckS"),
+      gen: $("gen"), reset: $("reset"), out: $("out"), toggle: $("toggle"), copy: $("copy"), status: $("status"), err: $("err") };
+
+    function buildCharset() {
+      let s = "";
+      if (ui.ckU.checked) s += UPPER;
+      if (ui.ckL.checked) s += LOWER;
+      if (ui.ckD.checked) s += DIGIT;
+      if (ui.ckS.checked) s += SYMBOL;
+      return s;
+    }
+
+    function concatBytes(a, b){
+      const out = new Uint8Array(a.length + b.length);
+      out.set(a, 0); out.set(b, a.length); return out;
+    }
+
+    async function sha512(bytes){
+      const buf = await crypto.subtle.digest("SHA-512", bytes);
+      return new Uint8Array(buf);
+    }
+
+    async function deriveStream(input, salt, iterations, total){
+      const enc = new TextEncoder();
+      let data = concatBytes(enc.encode(input || ""), enc.encode(salt || ""));
+      // churn deterministically
+      for (let i=0;i<Math.max(1, iterations);i++) data = await sha512(data);
+
+      const out = new Uint8Array(total);
+      let produced = 0, counter = 0, state = data;
+      while (produced < total){
+        // expand using state + counter
+        const block = await sha512(concatBytes(state, new Uint8Array([counter & 0xff])));
+        const chunk = Math.min(block.length, total - produced);
+        out.set(block.subarray(0, chunk), produced);
+        produced += chunk; counter++;
+        // mix state a bit to avoid trivial repetition
+        state = await sha512(concatBytes(block, state));
+      }
+      return out;
+    }
+
+    function pick(bytes, idxRef, charset){
+      const i = idxRef.i % bytes.length; // wrap safely
+      const ch = charset[ bytes[i] % charset.length ];
+      idxRef.i++;
+      return ch;
+    }
+
+    function fisherYatesDeterministic(arr, bytes){
+      // Shuffle using bytes as PRNG
+      let j = 0;
+      for (let i = arr.length - 1; i > 0; i--){
+        j = bytes[(arr.length - 1 - i) % bytes.length] % (i + 1);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    async function generate() {
+      ui.err.hidden = true; ui.err.textContent = ""; ui.status.classList.remove("show");
+      let length = parseInt(ui.len.value, 10);
+      const level = parseInt(ui.lvl.value, 10);
+      if (!Number.isFinite(length) || length < 4) length = 15;
+      const sets = [];
+      if (ui.ckU.checked) sets.push(UPPER);
+      if (ui.ckL.checked) sets.push(LOWER);
+      if (ui.ckD.checked) sets.push(DIGIT);
+      if (ui.ckS.checked) sets.push(SYMBOL);
+      if (sets.length === 0){
+        ui.err.textContent = "Please select at least one character set.";
+        ui.err.hidden = false; return;
+      }
+      const charset = buildCharset();
+
+      ui.gen.disabled = true;
+      try {
+        // We need bytes for: inclusion of each selected set + fill + shuffle
+        const need = length + sets.length + length; // conservative
+        const bytes = await deriveStream(ui.inp.value, ui.salt.value, level, Math.max(64, need));
+        const idxRef = { i: 0 };
+
+        const out = [];
+        // ensure at least one from each selected set (still deterministic)
+        for (const set of sets) out.push(pick(bytes, idxRef, set));
+        // fill the rest from full charset
+        while (out.length < length) out.push(pick(bytes, idxRef, charset));
+        // deterministic shuffle using remaining bytes
+        fisherYatesDeterministic(out, bytes.slice(idxRef.i));
+        ui.out.value = out.join("");
+      } catch (e){
+        ui.err.textContent = "Unexpected error: " + (e && e.message ? e.message : e);
+        ui.err.hidden = false;
+      } finally {
+        ui.gen.disabled = false;
+      }
+    }
+
+    ui.gen.addEventListener('click', generate);
+    ui.reset.addEventListener('click', () => {
+      ui.inp.value = ""; ui.salt.value = "something"; ui.len.value = 15; ui.lvl.value = 50;
+      ui.ckU.checked = ui.ckL.checked = ui.ckD.checked = ui.ckS.checked = true;
+      ui.out.value = ""; ui.err.hidden = true; ui.status.classList.remove('show'); ui.out.type = 'password';
+    });
+    ui.toggle.addEventListener('click', () => {
+      ui.out.type = ui.out.type === 'password' ? 'text' : 'password';
+      ui.toggle.textContent = ui.out.type === 'password' ? '🙈' : '👁️';
+    });
+    ui.copy.addEventListener('click', async () => {
+      if (!ui.out.value) return;
+      try{ await navigator.clipboard.writeText(ui.out.value);
+        ui.status.textContent = 'Copied!'; ui.status.classList.add('show');
+        setTimeout(()=>ui.status.classList.remove('show'), 1200);
+      }catch{
+        ui.status.textContent = 'Copy failed'; ui.status.classList.add('show');
+        setTimeout(()=>ui.status.classList.remove('show'), 1500);
+      }
+    });
+
+    // Generate once on load to demo behavior (empty input + default salt)
+    window.addEventListener('load', generate);
+  </script>
+</body>
+</html>
