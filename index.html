@@ -3,65 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nisk - Coded by GPT5</title>
+  <title>nisk</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0f1220;--panel:#171a2b;--muted:#2a2e45;--text:#e7e9f3;--accent:#8b9dff;--accent-2:#7cf5ff;--danger:#ff6b6b;--ok:#68f3a9;
-      --radius:18px;--radius-sm:12px;--shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#0a0b12;--bg2:#0e1329;--panel:rgba(255,255,255,.06);--muted:rgba(255,255,255,.12);--text:#eef0ff;--sub:#bfc5ff;--accent:#a8b4ff;--accent-2:#86f5ff;--danger:#ff7474;--ok:#79f3b5;
+      --radius:20px;--rsm:14px;--shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+      --glass: blur(14px) saturate(140%);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(1200px 800px at 10% -10%,#1a1e33 0%,#0f1220 60%);color:var(--text);display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{width:min(900px,100%);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
-    h1{font-size:clamp(20px,2.6vw,28px);margin:0;font-weight:700;letter-spacing:.3px}
-    .pill{font-size:12px;background:rgba(139,157,255,.14);color:var(--accent);border:1px solid rgba(139,157,255,.35);padding:6px 10px;border-radius:999px}
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
-    @media (max-width:880px){.grid{grid-template-columns:1fr}}
-    fieldset{border:1px solid var(--muted);border-radius:var(--radius-sm);padding:14px}
-    legend{padding:0 8px;color:#c7cbff}
-    label{font-size:13px;color:#cfd3ea}
-    .row{display:grid;grid-template-columns:1fr 160px;gap:10px;margin:10px 0}
-    input[type="text"],input[type="number"],input[type="password"],input[type="search"],input[type="url"],input[type="email"],.out{width:100%;background:#0d1021;border:1px solid #2a2e45;color:var(--text);padding:12px 14px;border-radius:12px;outline:none}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; color:var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%,#1b1f3b 0%,#0b0e1d 60%),
+                  radial-gradient(1200px 800px at 120% 120%,#0d2338 0%,#0b0e1d 60%);
+      overflow-x:hidden; display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    /* floating aurora blobs */
+    .bg-blob{ position:fixed; inset:auto; width:55vmax; height:55vmax; filter:blur(60px); opacity:.25; pointer-events:none; z-index:0; mix-blend:screen; }
+    .b1{ top:-10vmax; left:-10vmax; background:conic-gradient(from 120deg, #8fb3ff, #7df0ff, #9c7dff, #8fb3ff); animation:float1 18s ease-in-out infinite; }
+    .b2{ bottom:-18vmax; right:-12vmax; background:conic-gradient(from -40deg, #7df0ff, #a9ffcf, #8fb3ff, #7df0ff); animation:float2 22s ease-in-out infinite; }
+    @keyframes float1{0%,100%{transform:translateY(0)}50%{transform:translateY(3vmax)}}
+    @keyframes float2{0%,100%{transform:translateY(0)}50%{transform:translateY(-3vmax)}}
+
+    .card{ position:relative; z-index:1; width:min(980px,100%); background:var(--panel); border:1px solid var(--muted); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px; backdrop-filter:var(--glass);
+      transition: transform .25s ease, box-shadow .25s ease; }
+    .card:hover{ transform:translateY(-2px); box-shadow:0 30px 90px rgba(0,0,0,.55); }
+
+    .header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:4px}
+    h1{font-size:clamp(22px,3.2vw,34px);margin:0;font-weight:800;letter-spacing:.3px;background:linear-gradient(90deg,#ffffff, #b2baff 40%, #86f5ff 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .brand-sub{font-size:12px;color:var(--sub);opacity:.9}
+
+    .marquee{
+      position:relative; overflow:hidden; border:1px dashed rgba(168,180,255,.35); border-radius:999px; padding:6px 0; margin-top:6px; background:rgba(255,255,255,.03)
+    }
+    .marquee-track{display:flex;gap:30px;white-space:nowrap;animation:mar 22s linear infinite;color:var(--accent)}
+    .marquee:hover .marquee-track{animation-play-state:paused}
+    @keyframes mar{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;margin-top:8px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    fieldset{border:1px solid var(--muted);border-radius:var(--rsm);padding:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));}
+    legend{padding:0 8px;color:#cfe0ff;letter-spacing:.2px}
+    label{font-size:13px;color:#dfe4ff}
+
+    .row{display:grid;grid-template-columns:1fr 220px;gap:12px;margin:12px 0}
+    .row.inline{grid-template-columns:1fr 1fr}
+    .input-wrap{position:relative}
+    input[type="text"],input[type="number"],input[type="password"],.out{width:100%;background:rgba(8,10,24,.8);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:13px 14px;border-radius:12px;outline:none;transition:border .2s, box-shadow .2s}
+    input::placeholder{color:#8590bb}
+    input:focus{border-color:#8fb3ff; box-shadow:0 0 0 3px rgba(143,179,255,.25)}
     input[type="number"]{appearance:textfield}
     input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{appearance:none;margin:0}
-    .row.inline{grid-template-columns:1fr 1fr}
+
     .checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px}
-    .checks label{display:flex;align-items:center;gap:8px;background:#0d1021;border:1px solid #2a2e45;border-radius:10px;padding:10px}
-    .hint{font-size:12px;color:#a7abcc;margin-top:4px}
-    .actions{display:flex;gap:10px;align-items:center;margin-top:10px}
-    button{background:linear-gradient(180deg,#6673ff,#5464ff);border:none;color:white;padding:12px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(84,100,255,.35)}
-    button.secondary{background:#22253b;border:1px solid #2a2e45;color:#d7daf5;box-shadow:none}
-    button.ghost{background:transparent;border:1px solid #2a2e45;color:#cfd3ea}
-    button:disabled{opacity:.6;cursor:not-allowed}
+    .checks label{display:flex;align-items:center;gap:8px;background:rgba(8,10,24,.8);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px}
+
+    .hint{font-size:12px;color:#a9b2e6;margin-top:6px}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:12px}
+
+    .btn{background:linear-gradient(180deg,#6e79ff,#5667ff);border:none;color:white;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 10px 30px rgba(86,103,255,.35);transition:transform .15s ease, filter .15s ease}
+    .btn:hover{transform:translateY(-1px); filter:brightness(1.05)}
+    .btn:active{transform:translateY(0)}
+    .secondary{background:linear-gradient(180deg,#1f2340,#1a203d);border:1px solid rgba(255,255,255,.14);color:#dbe1ff;box-shadow:none}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,.16);color:#d5dafb}
+    .tiny{padding:8px 10px;border-radius:10px;font-size:12px}
+
+    .peek{position:absolute;top:50%;right:8px;transform:translateY(-50%)}
+
     .out-wrap{position:relative}
-    .out{font-size:16px;padding-right:96px}
+    .out{font-size:16px;padding-right:112px;font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace}
     .icon-btn{position:absolute;top:50%;transform:translateY(-50%);right:8px;display:flex;gap:6px}
-    .icon-btn button{padding:8px 10px;border-radius:10px}
-    .status{font-size:12px;color:#a7ffcf;margin-left:10px;opacity:0;transition:.3s ease}
+
+    .status{font-size:12px;color:#a7ffcf;margin-left:10px;opacity:0;transition:.25s ease}
     .status.show{opacity:1}
-    .footer{margin-top:18px;font-size:12px;color:#9aa0c8}
+
+    .footer{margin-top:12px;font-size:12px;color:#a7b0e0;display:flex;flex-direction:column;gap:8px}
+    .badge-warn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,107,.12);color:#ffd4d4;border:1px solid rgba(255,107,107,.38);padding:7px 10px;border-radius:10px}
     .err{color:var(--danger);font-size:12px;margin-top:6px}
+
+    .kbd{font-family:"JetBrains Mono", monospace; background:rgba(255,255,255,.08); padding:2px 6px; border:1px solid rgba(255,255,255,.16); border-radius:6px}
   </style>
 </head>
 <body>
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+
   <div class="card">
     <div class="header">
-      <h1>Nisk - Coded by GPT5</h1>
-      <span class="pill">Same input + salt ⇒ same password</span>
+      <div>
+        <h1>nisk</h1>
+        <div class="brand-sub">nisk ~ <a href="https://github.com/root-tanishq/nisk" style="color: white;">@github.com/root-tanishq/nisk</a></div>
+      </div>
     </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Deterministic password generator</span>
+        <span>Same input + salt ⇒ same password</span>
+        <span>code @github.com/root-tanishq/nisk</span>
+        <span>Deterministic password generator</span>
+        <span>Same input + salt ⇒ same password</span>
+        <span>code @github.com/root-tanishq/nisk</span>
+      </div>
+    </div>
+
     <div class="grid">
       <section>
         <fieldset>
           <legend>Inputs</legend>
           <div class="row">
             <label>
-              Source string / key
-              <input id="inp" type="text" placeholder="e.g., my-username or any phrase" />
+              Source phrase
+              <div class="input-wrap">
+                <input id="inp" type="password" placeholder="Enter any phrase / sentence" />
+                <button id="peekInp" class="ghost tiny peek" title="Hold to peek" aria-label="Hold to peek">👁️</button>
+              </div>
             </label>
             <label>
               Salt
-              <input id="salt" type="text" value="something" />
+              <div class="input-wrap">
+                <input id="salt" type="password" placeholder="Enter any salt value" />
+                <button id="peekSalt" class="ghost tiny peek" title="Hold to peek" aria-label="Hold to peek">👁️</button>
+              </div>
             </label>
           </div>
           <div class="row inline">
@@ -70,7 +135,7 @@
               <input id="len" type="number" min="4" max="128" value="15" />
             </label>
             <label>
-              Randomness level
+              Algorithm rotation
               <input id="lvl" type="number" min="1" max="500" value="50" />
             </label>
           </div>
@@ -78,14 +143,13 @@
             <label><input id="ckU" type="checkbox" checked /> Uppercase (A–Z)</label>
             <label><input id="ckL" type="checkbox" checked /> Lowercase (a–z)</label>
             <label><input id="ckD" type="checkbox" checked /> Digits (0–9)</label>
-            <label><input id="ckS" type="checkbox" checked /> Symbols (!@#$…)</label>
+            <label><input id="ckS" type="checkbox" checked /> Symbols (!@#$%^&*)</label>
           </div>
-          <div class="hint">Deterministic: change any option → password changes predictably. It <strong>does not</strong> use true randomness.
-          </div>
+          <div class="hint">Deterministic: change any option → password changes predictably.</div>
           <div id="err" class="err" hidden></div>
           <div class="actions">
-            <button id="gen">Generate</button>
-            <button id="reset" class="secondary" type="button">Reset</button>
+            <button id="gen" class="btn">Generate</button>
+            <button id="reset" class="btn secondary" type="button">Reset</button>
             <span id="status" class="status">Copied!</span>
           </div>
         </fieldset>
@@ -96,13 +160,16 @@
           <div class="out-wrap">
             <input id="out" class="out" type="password" readonly placeholder="•••••••••••••" />
             <div class="icon-btn">
-              <button id="toggle" class="ghost" title="Show/Hide" aria-label="Toggle visibility">🙈</button>
-              <button id="copy" class="ghost" title="Copy" aria-label="Copy password">📋</button>
+              <button id="toggle" class="ghost tiny" title="Show/Hide" aria-label="Toggle visibility">🙈</button>
+              <button id="copy" class="ghost tiny" title="Copy" aria-label="Copy password">📋</button>
             </div>
           </div>
           <div class="hint">Hidden by default. Use the eye to reveal. Copy writes to your clipboard.</div>
         </fieldset>
-        <div class="footer">⚠️ For production secrets, prefer a high-quality password manager with secure random generation. This tool is for deterministic, reproducible passwords from an input.
+        <div class="footer">
+          <span class="badge-warn">This product is AI‑generated.</span>
+          <span><strong>Tip:</strong> hold <span class="kbd">👁️</span> to peek your inputs. Click <span class="kbd">🙈</span> to toggle the output.</span>
+          <span><strong>Note from author:</strong> It's recommended to use sentences as source phrases for better entropy.</span>
         </div>
       </section>
     </div>
@@ -112,12 +179,13 @@
     const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const LOWER = "abcdefghijklmnopqrstuvwxyz";
     const DIGIT = "0123456789";
-    const SYMBOL = "!@#$%^&*()_+-=[]{}|;:',.<>?/`~\"\\"; // note escaped quote & backslash
+    const SYMBOL = "!@#$%^&*";
 
     const $ = (id) => document.getElementById(id);
     const ui = { inp: $("inp"), salt: $("salt"), len: $("len"), lvl: $("lvl"),
       ckU: $("ckU"), ckL: $("ckL"), ckD: $("ckD"), ckS: $("ckS"),
-      gen: $("gen"), reset: $("reset"), out: $("out"), toggle: $("toggle"), copy: $("copy"), status: $("status"), err: $("err") };
+      gen: $("gen"), reset: $("reset"), out: $("out"), toggle: $("toggle"), copy: $("copy"), status: $("status"), err: $("err"),
+      peekInp: $("peekInp"), peekSalt: $("peekSalt") };
 
     function buildCharset() {
       let s = "";
@@ -141,32 +209,28 @@
     async function deriveStream(input, salt, iterations, total){
       const enc = new TextEncoder();
       let data = concatBytes(enc.encode(input || ""), enc.encode(salt || ""));
-      // churn deterministically
       for (let i=0;i<Math.max(1, iterations);i++) data = await sha512(data);
 
       const out = new Uint8Array(total);
       let produced = 0, counter = 0, state = data;
       while (produced < total){
-        // expand using state + counter
         const block = await sha512(concatBytes(state, new Uint8Array([counter & 0xff])));
         const chunk = Math.min(block.length, total - produced);
         out.set(block.subarray(0, chunk), produced);
         produced += chunk; counter++;
-        // mix state a bit to avoid trivial repetition
         state = await sha512(concatBytes(block, state));
       }
       return out;
     }
 
     function pick(bytes, idxRef, charset){
-      const i = idxRef.i % bytes.length; // wrap safely
+      const i = idxRef.i % bytes.length;
       const ch = charset[ bytes[i] % charset.length ];
       idxRef.i++;
       return ch;
     }
 
     function fisherYatesDeterministic(arr, bytes){
-      // Shuffle using bytes as PRNG
       let j = 0;
       for (let i = arr.length - 1; i > 0; i--){
         j = bytes[(arr.length - 1 - i) % bytes.length] % (i + 1);
@@ -193,17 +257,13 @@
 
       ui.gen.disabled = true;
       try {
-        // We need bytes for: inclusion of each selected set + fill + shuffle
-        const need = length + sets.length + length; // conservative
+        const need = length + sets.length + length;
         const bytes = await deriveStream(ui.inp.value, ui.salt.value, level, Math.max(64, need));
         const idxRef = { i: 0 };
 
         const out = [];
-        // ensure at least one from each selected set (still deterministic)
         for (const set of sets) out.push(pick(bytes, idxRef, set));
-        // fill the rest from full charset
         while (out.length < length) out.push(pick(bytes, idxRef, charset));
-        // deterministic shuffle using remaining bytes
         fisherYatesDeterministic(out, bytes.slice(idxRef.i));
         ui.out.value = out.join("");
       } catch (e){
@@ -220,10 +280,12 @@
       ui.ckU.checked = ui.ckL.checked = ui.ckD.checked = ui.ckS.checked = true;
       ui.out.value = ""; ui.err.hidden = true; ui.status.classList.remove('show'); ui.out.type = 'password';
     });
+
     ui.toggle.addEventListener('click', () => {
       ui.out.type = ui.out.type === 'password' ? 'text' : 'password';
       ui.toggle.textContent = ui.out.type === 'password' ? '🙈' : '👁️';
     });
+
     ui.copy.addEventListener('click', async () => {
       if (!ui.out.value) return;
       try{ await navigator.clipboard.writeText(ui.out.value);
@@ -235,7 +297,16 @@
       }
     });
 
-    // Generate once on load to demo behavior (empty input + default salt)
+    function attachHoldToPeek(inputEl, buttonEl){
+      const show = () => inputEl.type = 'text';
+      const hide = () => inputEl.type = 'password';
+      buttonEl.addEventListener('mousedown', show);
+      buttonEl.addEventListener('touchstart', show, {passive:true});
+      [ 'mouseup','mouseleave','touchend','touchcancel','blur' ].forEach(ev=>buttonEl.addEventListener(ev, hide));
+    }
+    attachHoldToPeek(ui.inp, ui.peekInp);
+    attachHoldToPeek(ui.salt, ui.peekSalt);
+
     window.addEventListener('load', generate);
   </script>
 </body>
